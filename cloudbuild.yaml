@@ -1,0 +1,125 @@
+# ./cloudbuild.yaml
+
+steps:
+# --- BACKEND STEPS ---
+# These steps will only run if the trigger variable _SERVICE is 'backend'
+
+  # Build backend container image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Backend Image'
+    dir: 'backend' # <--- Run this step inside the 'backend' directory
+    waitFor: ['-'] # <--- Start immediately
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rumi-analytica/backend:latest'
+      - '.'
+    # Only run this step if _SERVICE is 'backend' or not set (for manual runs)
+    if: '_SERVICE == "backend" || !defined(_SERVICE)'
+
+  # Push backend container image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Backend Image'
+    dir: 'backend'
+    waitFor: ['Build Backend Image']
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rumi-analytica/backend:latest'
+    if: '_SERVICE == "backend" || !defined(_SERVICE)'
+
+  # Deploy backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy Backend'
+    dir: 'backend'
+    waitFor: ['Push Backend Image']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'rumi-analytica-backend'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rumi-analytica/backend:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'SIMPLE_AUTH_USERNAME=${_SIMPLE_AUTH_USERNAME},FRONTEND_URL=${_FRONTEND_URL}' # <-- Added FRONTEND_URL
+      - '--set-secrets'
+      - 'SIMPLE_AUTH_PASSWORD_HASH=RUMI_PASSWORD_HASH:latest,JWT_SECRET_KEY=RUMI_JWT_SECRET:latest'
+    if: '_SERVICE == "backend" || !defined(_SERVICE)'
+
+
+# --- FRONTEND STEPS ---
+# These steps will only run if the trigger variable _SERVICE is 'frontend'
+
+  # Install frontend dependencies
+  - name: 'node:18'
+    id: 'Frontend NPM Install'
+    entrypoint: npm
+    dir: 'frontend'
+    waitFor: ['-']
+    args: ['ci']
+    if: '_SERVICE == "frontend" || !defined(_SERVICE)'
+
+  # Build the frontend app
+  - name: 'node:18'
+    id: 'Frontend Build'
+    entrypoint: npm
+    dir: 'frontend'
+    waitFor: ['Frontend NPM Install']
+    args: ['run', 'build']
+    env:
+      - 'VITE_BACKEND_URL=${_BACKEND_URL}'
+    if: '_SERVICE == "frontend" || !defined(_SERVICE)'
+
+  # Build frontend container image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Frontend Image'
+    dir: 'frontend'
+    waitFor: ['Frontend Build']
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rumi-analytica/frontend:latest'
+      - '.'
+    if: '_SERVICE == "frontend" || !defined(_SERVICE)'
+
+  # Push frontend container image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Frontend Image'
+    dir: 'frontend'
+    waitFor: ['Build Frontend Image']
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rumi-analytica/frontend:latest'
+    if: '_SERVICE == "frontend" || !defined(_SERVICE)'
+
+  # Deploy frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy Frontend'
+    dir: 'frontend'
+    waitFor: ['Push Frontend Image']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'rumi-analytica-frontend'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rumi-analytica/frontend:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+    if: '_SERVICE == "frontend" || !defined(_SERVICE)'
+
+# Substitution variables that will be set in the triggers
+substitutions:
+  _SERVICE: '' # Default to empty. Can be 'frontend' or 'backend'.
+  _BACKEND_URL: 'https://rumi-analytica-backend-your-hash-uc.a.run.app' # Replace with your actual backend URL
+  _FRONTEND_URL: 'https://rumi-analytica-frontend-your-hash-uc.a.run.app' # Replace with your actual frontend URL
+
+options:
+  logging: CLOUD_LOGGING_ONLY
