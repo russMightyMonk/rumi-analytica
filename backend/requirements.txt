@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+google-adk
+google-generativeai
+pydantic
