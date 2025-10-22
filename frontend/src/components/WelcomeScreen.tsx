@@ -25,33 +25,33 @@ const features = [
 
 export const WelcomeScreen = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center animate-in fade-in-50 duration-700">
-      <div className="max-w-3xl mx-auto space-y-8">
-        <div className="space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-in slide-in-from-bottom-4 duration-700">
+    <div className="flex flex-col items-center justify-center min-h-[65vh] px-6 text-center animate-in fade-in-50 duration-700">
+      <div className="max-w-4xl mx-auto space-y-12">
+        <div className="space-y-6">
+          <h2 className="text-5xl md:text-6xl font-semibold tracking-tight text-foreground animate-in slide-in-from-bottom-4 duration-700">
             Welcome to Rumi-Analytica
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto animate-in slide-in-from-bottom-5 duration-700 delay-100">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-in slide-in-from-bottom-5 duration-700 delay-100 font-light">
             Your intelligent analytics companion. Ask questions, get insights, and make data-driven decisions with ease.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12 animate-in slide-in-from-bottom-6 duration-700 delay-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16 animate-in slide-in-from-bottom-6 duration-700 delay-200">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all hover:scale-105 group"
+              className="bg-card rounded-[24px] p-8 hover:shadow-[0_10px_30px_rgba(0,_0,_0,_0.08)] transition-all duration-500 hover:scale-[1.02] group"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
-                  <feature.icon className="h-6 w-6 text-primary" />
+              <div className="flex items-start gap-5">
+                <div className="p-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl group-hover:from-primary/15 group-hover:to-accent/15 transition-colors duration-300">
+                  <feature.icon className="h-7 w-7 text-primary" />
                 </div>
                 <div className="text-left flex-1">
-                  <h3 className="font-semibold text-foreground mb-2">
+                  <h3 className="font-semibold text-lg text-foreground mb-2.5">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-[15px] text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -60,9 +60,9 @@ export const WelcomeScreen = () => {
           ))}
         </div>
 
-        <div className="mt-12 p-6 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-primary/20 animate-in slide-in-from-bottom-7 duration-700 delay-300">
-          <p className="text-sm text-muted-foreground">
-            💡 <span className="font-semibold">Pro tip:</span> Try asking "What was my traffic last month?" or "Show me top performing pages"
+        <div className="mt-16 p-6 bg-muted/50 rounded-[20px] animate-in slide-in-from-bottom-7 duration-700 delay-300">
+          <p className="text-[15px] text-muted-foreground">
+            💡 <span className="font-semibold text-foreground">Pro tip:</span> Try asking "What was my traffic last month?" or "Show me top performing pages"
           </p>
         </div>
       </div>

@@ -77,15 +77,15 @@ const Index = () => {
                   />
                 ))}
                 {isLoading && (
-                  <div className="flex justify-start gap-3 p-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm">
+                  <div className="flex justify-start gap-4 py-4 px-2 animate-in fade-in-50">
+                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm shadow-md">
                       R
                     </div>
-                    <div className="bg-card border border-border rounded-2xl px-4 py-3">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                    <div className="bg-card shadow-[0_2px_8px_rgba(0,_0,_0,_0.06)] rounded-3xl px-5 py-3.5">
+                      <div className="flex gap-1.5">
+                        <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                        <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                        <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
                       </div>
                     </div>
                   </div>
@@ -95,8 +95,8 @@ const Index = () => {
           </div>
         </ScrollArea>
 
-        <div className="border-t border-border bg-card/50 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-4 max-w-4xl">
+        <div className="border-t border-border/50 bg-card/80 backdrop-blur-xl shadow-[0_-1px_3px_rgba(0,_0,_0,_0.05)]">
+          <div className="container mx-auto px-6 py-5 max-w-4xl">
             <ChatInput onSend={handleSendMessage} disabled={isLoading} />
           </div>
         </div>

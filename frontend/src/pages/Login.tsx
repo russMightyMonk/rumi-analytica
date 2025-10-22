@@ -34,23 +34,25 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <Card className="w-full max-w-md border-border/60 shadow-[0_10px_30px_rgba(0,_0,_0,_0.08)] rounded-[28px]">
+        <CardHeader className="space-y-6 pt-10 pb-6">
+          <div className="flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-3xl shadow-[0_4px_16px_rgba(33,_150,_243,_0.3)]">
               R
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">Welcome to Rumi Analytica</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access the analytics platform
-          </CardDescription>
+          <div className="space-y-2">
+            <CardTitle className="text-3xl text-center font-semibold tracking-tight">Welcome to Rumi Analytica</CardTitle>
+            <CardDescription className="text-center text-[15px]">
+              Enter your credentials to access the analytics platform
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+        <CardContent className="pb-10">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2.5">
+              <Label htmlFor="username" className="text-sm font-medium">Username</Label>
               <Input
                 id="username"
                 type="text"
@@ -59,10 +61,11 @@ const Login = () => {
                 required
                 disabled={isLoading}
                 placeholder="Enter your username"
+                className="h-12 rounded-[16px] border-border/60 shadow-[0_2px_8px_rgba(0,_0,_0,_0.04)] focus-visible:ring-2 focus-visible:ring-primary/30 transition-all"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-2.5">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -71,9 +74,14 @@ const Login = () => {
                 required
                 disabled={isLoading}
                 placeholder="Enter your password"
+                className="h-12 rounded-[16px] border-border/60 shadow-[0_2px_8px_rgba(0,_0,_0,_0.04)] focus-visible:ring-2 focus-visible:ring-primary/30 transition-all"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full h-12 rounded-[16px] text-[15px] font-medium shadow-[0_4px_12px_rgba(33,_150,_243,_0.3)] hover:shadow-[0_6px_16px_rgba(33,_150,_243,_0.4)] transition-all mt-6" 
+              disabled={isLoading}
+            >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>

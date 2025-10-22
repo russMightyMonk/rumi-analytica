@@ -27,21 +27,23 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-      <Textarea
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Ask Rumi about your analytics data..."
-        disabled={disabled}
-        className="min-h-[60px] max-h-[200px] resize-none focus-visible:ring-primary"
-        rows={1}
-      />
+    <form onSubmit={handleSubmit} className="flex gap-3 items-end">
+      <div className="flex-1 relative">
+        <Textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask Rumi about your analytics data..."
+          disabled={disabled}
+          className="min-h-[56px] max-h-[200px] resize-none rounded-[20px] border-border/60 bg-card shadow-[0_2px_8px_rgba(0,_0,_0,_0.06)] focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all px-5 py-4 text-[15px]"
+          rows={1}
+        />
+      </div>
       <Button
         type="submit"
         size="icon"
         disabled={!message.trim() || disabled}
-        className="h-[60px] w-[60px] flex-shrink-0"
+        className="h-[56px] w-[56px] flex-shrink-0 rounded-full shadow-[0_4px_12px_rgba(33,_150,_243,_0.3)] hover:shadow-[0_6px_16px_rgba(33,_150,_243,_0.4)] transition-all"
       >
         <Send className="h-5 w-5" />
       </Button>
