@@ -7,3 +7,4 @@ python-jose[cryptography]
 google-adk
 google-generativeai
 pydantic
+httpx
