@@ -1,10 +1,23 @@
-fastapi
-uvicorn[standard]
-python-dotenv
-passlib[bcrypt]
+# Core dependencies
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-dotenv==1.0.0
+pydantic==2.5.0
+httpx==0.26.0
+
+# Auth dependencies
+passlib[bcrypt]==1.7.4
 bcrypt==3.2.2
-python-jose[cryptography]
-google-adk
-google-generativeai
-pydantic
-httpx
+python-jose[cryptography]==3.3.0
+
+# Google ADK and its compatible ecosystem
+google-adk>=1.16.0
+google-generativeai==0.3.2
+google-ai-generativelanguage==0.3.3
+
+# Pin conflicting dependencies
+protobuf>=4.25.0,<5.0.0
+grpcio>=1.60.0,<1.65.0
+google-api-core>=2.15.0,<2.20.0
+google-auth>=2.27.0,<3.0.0
+googleapis-common-protos>=1.62.0,<2.0.0
