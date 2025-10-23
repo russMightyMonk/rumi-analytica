@@ -1,8 +1,11 @@
+# requirements.txt
+
 # Core dependencies
-fastapi>=0.115.0
+# Let google-adk determine the correct versions of fastapi and pydantic
+fastapi
+pydantic
 uvicorn[standard]>=0.30.0
 python-dotenv>=1.0.0
-pydantic>=2.5.0
 httpx>=0.26.0
 
 # Auth dependencies
@@ -12,3 +15,6 @@ python-jose[cryptography]==3.3.0
 
 # Google ADK (includes AI capabilities)
 google-adk>=1.17.0
+
+# Extra for form data
+python-multipart
