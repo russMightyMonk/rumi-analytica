@@ -36,7 +36,7 @@ from google.adk.cli.fast_api import get_fast_api_app
 
 # The name of the folder containing your agent.py
 # Example: ./agents/analytica_agent/agent.py -> app_name is 'analytica_agent'
-AGENT_APP_NAME = "analytica_agent" 
+AGENT_APP_NAME = "agent" 
 
 AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
 app: FastAPI = get_fast_api_app(
@@ -48,8 +48,9 @@ app.title = "Rumi-Analytica Backend"
 
 # --- CORS setup ---
 origins = [
-    "http://localhost:3000", # CRA
-    "http://localhost:5173", # Vite
+    "http://localhost:3000", 
+    "http://localhost:5173",
+    "http://localhost:8080",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -167,3 +168,11 @@ async def proxy_chat(
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# --- FIX: Hide ADK routes from docs ---
+for route in app.routes:
+    # Check if the route has an endpoint and if that endpoint has a __module__
+    if hasattr(route, "endpoint") and hasattr(route.endpoint, "__module__"):
+        # If the route's code is from the google.adk library, hide it
+        if route.endpoint.__module__.startswith("google.adk"):
+            route.include_in_schema = False
