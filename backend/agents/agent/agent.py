@@ -19,10 +19,5 @@ root_agent = Agent(
 
     # Keep complex instructions in a separate file or function for cleanliness.
     instruction=ANALYTICS_INSTRUCTIONS,
-    description="An agent for performing data analysis by writing and executing Python code.",
-    code_executor=VertexAiCodeExecutor(
-        # These are good defaults for data analysis.
-        optimize_data_file=True,
-        stateful=True,
-    ), 
+    description="An agent for performing data analysis by writing and executing Python code.", 
 )
