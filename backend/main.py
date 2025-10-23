@@ -41,7 +41,7 @@ AGENT_APP_NAME = "agent"
 AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
 app: FastAPI = get_fast_api_app(
     agents_dir=os.path.join(AGENT_DIR, "agents"), # Point to the directory containing agent folders
-    web=False,
+    web=True,
 )
 
 app.title = "Rumi-Analytica Backend"
