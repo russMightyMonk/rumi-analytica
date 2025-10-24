@@ -12,7 +12,7 @@ Analyze the user's request, write the necessary code, and then interpret the res
 root_agent = Agent(
     # The 'name' parameter inside the Agent should match your folder name
     # for consistency, though 'root_agent' is the critical variable name.
-    name="rumi-analytica",
+    name="rumi_analytica",
 
     # Use an environment variable for the model, with a sensible default.
     model=os.getenv("ANALYTICS_AGENT_MODEL", "gemini-2.5-flash"),
