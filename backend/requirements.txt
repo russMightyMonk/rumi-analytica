@@ -18,3 +18,4 @@ google-adk>=1.17.0
 
 # Extra for form data
 python-multipart
+ag_ui_adk

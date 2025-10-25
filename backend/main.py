@@ -13,7 +13,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from ag_ui_adk import ADKAgent
-from agents.agent import root_agent as fmy_llm_agent
+from agents.agent import root_agent
 
 # --- Load environment variables ---
 load_dotenv()
@@ -110,7 +110,7 @@ async def chat_handler(
     # 1. Create an ADKAgent wrapper instance FOR THIS REQUEST.
     #    This correctly associates the authenticated user_id with the agent session.
     adk_agent_wrapper = ADKAgent(
-        adk_agent=my_llm_agent,
+        adk_agent=root_agent,
         app_name=AGENT_APP_NAME,
         user_id=user_id,
         session_timeout_seconds=3600,
