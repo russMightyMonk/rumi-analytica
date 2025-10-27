@@ -125,7 +125,7 @@ gcloud run deploy "rumi-analytica-backend" \
     --platform="managed" \
     --allow-unauthenticated \
     --port="8080" \
-    --set-env-vars="SIMPLE_AUTH_USERNAME=${SIMPLE_AUTH_USERNAME},GOOGLE_GENAI_USE_VERTEXAI=True" \
+    --set-env-vars="SIMPLE_AUTH_USERNAME=${SIMPLE_AUTH_USERNAME},GOOGLE_GENAI_USE_VERTEXAI=True,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${REGION}" \
     --set-secrets="SIMPLE_AUTH_PASSWORD_HASH=RUMI_PASSWORD_HASH:latest,JWT_SECRET_KEY=RUMI_JWT_SECRET:latest"
 
 BACKEND_URL=$(gcloud run services describe "rumi-analytica-backend" --region="$REGION" --format='value(status.url)')
@@ -161,7 +161,7 @@ gcloud builds triggers create github \
     --build-config="cloudbuild.yaml" \
     --service-account="projects/${PROJECT_ID}/serviceAccounts/${BUILD_SA_EMAIL}" \
     --included-files="backend/**" \
-    --substitutions="_SERVICE=backend,_BACKEND_URL=${BACKEND_URL},_FRONTEND_URL=${FRONTEND_URL},_SIMPLE_AUTH_USERNAME=${SIMPLE_AUTH_USERNAME}"
+    --substitutions="_SERVICE=backend,_BACKEND_URL=${BACKEND_URL},_FRONTEND_URL=${FRONTEND_URL},_SIMPLE_AUTH_USERNAME=${SIMPLE_AUTH_USERNAME},_GOOGLE_CLOUD_PROJECT=${PROJECT_ID},_GOOGLE_CLOUD_LOCATION=${REGION}"
 
 gcloud builds triggers create github \
     --name="deploy-rumi-frontend-main" \
