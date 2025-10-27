@@ -21,10 +21,13 @@ from agents.agent.agent import root_agent as agent
 # --- Load Environment Variables ---
 load_dotenv()
 
+# These are loaded from Secret Manager in Cloud Run
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-SIMPLE_AUTH_USERNAME = os.getenv("SIMPLE_AUTH_USERNAME")
 SIMPLE_AUTH_PASSWORD_HASH = os.getenv("SIMPLE_AUTH_PASSWORD_HASH")
+
+# This is loaded from environment variables in Cloud Run
+SIMPLE_AUTH_USERNAME = os.getenv("SIMPLE_AUTH_USERNAME")
 ALGORITHM = "HS256"
 
 if not GOOGLE_API_KEY:
@@ -36,8 +39,20 @@ if not all([JWT_SECRET_KEY, SIMPLE_AUTH_USERNAME, SIMPLE_AUTH_PASSWORD_HASH]):
 app = FastAPI(title="Rumi-Analytica Backend")
 router = APIRouter()
 
-# --- CORS Middleware ---
-origins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080"]
+# --- CORS Middleware (UPDATED) ---
+# Base origins for local development
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8080",
+]
+
+# Add the deployed frontend URL from environment variables for production
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+if FRONTEND_URL:
+    print(f"INFO: Allowing CORS for deployed origin: {FRONTEND_URL}")
+    origins.append(FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -101,7 +116,6 @@ async def simple_chat(
     user_id = current_user["username"]
     session_id = f"{user_id}_default_session"
 
-    # Get or create the session (this part was already correct)
     session = await session_service.get_session(
         app_name=AGENT_APP_NAME, user_id=user_id, session_id=session_id
     )
@@ -112,35 +126,29 @@ async def simple_chat(
             session_id=session_id,
         )
 
-    # 1. Create a Runner instance
     runner = Runner(
         agent=agent,
         session_service=session_service,
         app_name=AGENT_APP_NAME
     )
 
-    # 2. Format the message using Content and Part objects
     adk_message = Content(role="user", parts=[Part(text=chat_request.message)])
-
     response_text = ""
     try:
-        # 3. Use runner.run_async and iterate to find the final response
         async for event in runner.run_async(
             user_id=user_id,
             session_id=session.id,
             new_message=adk_message
         ):
             if event.is_final_response():
-                # Assuming the final response has at least one text part
                 response_text = event.content.parts[0].text
-                break # Exit the loop once we have the final answer
+                break
 
     except Exception as e:
         print(f"Error during ADK run: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="Error communicating with the agent.")
 
     if not response_text:
-        # Handle cases where the agent might not produce a final response
         raise HTTPException(status_code=500, detail="Agent did not produce a final response.")
 
     return {"response": response_text}
