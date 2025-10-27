@@ -1,6 +1,5 @@
 import os
 from google.adk.agents import Agent
-from google.adk.code_executors import VertexAiCodeExecutor
 
 ANALYTICS_INSTRUCTIONS = """
 You are a world-class data analyst. 

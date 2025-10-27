@@ -11,12 +11,12 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-# --- ADK Imports for manual session management ---
-# FIX 1: Removed 'Turn' from the import as it's not a public class
 from google.adk.sessions import InMemorySessionService
+from google.adk.runners import Runner
+from google.genai.types import Content, Part
 
 # --- Your existing ADK agent definition ---
-from agents.agent import agent
+from agents.agent.agent import root_agent as agent
 
 # --- Load Environment Variables ---
 load_dotenv()
@@ -92,8 +92,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     access_token = create_access_token(data={"sub": form_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# --- Simple REST endpoint for your Vite frontend ---
-# FIX 3: Renamed endpoint to /api/chat
+# --- REVISED CHAT LOGIC USING THE RUNNER PATTERN ---
 @router.post("/api/chat", response_model=SimpleChatResponse)
 async def simple_chat(
     chat_request: SimpleChatRequest,
@@ -102,27 +101,47 @@ async def simple_chat(
     user_id = current_user["username"]
     session_id = f"{user_id}_default_session"
 
-    try:
-        session = await session_service.get_session(
-            app_name=AGENT_APP_NAME, user_id=user_id, session_id=session_id
-        )
-    except KeyError:
+    # Get or create the session (this part was already correct)
+    session = await session_service.get_session(
+        app_name=AGENT_APP_NAME, user_id=user_id, session_id=session_id
+    )
+    if session is None:
         session = await session_service.create_session(
             app_name=AGENT_APP_NAME,
             user_id=user_id,
             session_id=session_id,
-            agent_name=agent.name,
         )
 
-    adk_message = {"role": "user", "parts": [{"text": chat_request.message}]}
+    # 1. Create a Runner instance
+    runner = Runner(
+        agent=agent,
+        session_service=session_service,
+        app_name=AGENT_APP_NAME
+    )
 
+    # 2. Format the message using Content and Part objects
+    adk_message = Content(role="user", parts=[Part(text=chat_request.message)])
+
+    response_text = ""
     try:
-        # FIX 2: Removed the ': Turn' type hint that caused the crash
-        final_turn = await session.run_turn(new_message=adk_message)
-        response_text = final_turn.response.output
+        # 3. Use runner.run_async and iterate to find the final response
+        async for event in runner.run_async(
+            user_id=user_id,
+            session_id=session.id,
+            new_message=adk_message
+        ):
+            if event.is_final_response():
+                # Assuming the final response has at least one text part
+                response_text = event.content.parts[0].text
+                break # Exit the loop once we have the final answer
+
     except Exception as e:
-        print(f"Error during ADK turn: {e}", file=sys.stderr)
+        print(f"Error during ADK run: {e}", file=sys.stderr)
         raise HTTPException(status_code=500, detail="Error communicating with the agent.")
+
+    if not response_text:
+        # Handle cases where the agent might not produce a final response
+        raise HTTPException(status_code=500, detail="Agent did not produce a final response.")
 
     return {"response": response_text}
 

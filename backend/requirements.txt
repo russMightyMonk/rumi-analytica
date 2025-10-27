@@ -15,6 +15,7 @@ python-jose[cryptography]==3.3.0
 
 # Google ADK (includes AI capabilities)
 google-adk>=1.17.0
+google-generativeai
 
 # Extra for form data
 python-multipart
