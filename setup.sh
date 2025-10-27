@@ -99,7 +99,7 @@ PASSWORD_HASH=$(python3 -c "from passlib.context import CryptContext; print(Cryp
 pip uninstall -y "passlib[bcrypt]" "bcrypt" > /dev/null
 print_info "Password hashed successfully using passlib."
 
-echo "$PASSWORD_HASH" | gcloud secrets create RUMI_PASSWORD_HASH --data-file=- --replication-policy=automatic --quiet || (echo "$PASSWORD_HASH" | gcloud secrets versions add RUMI_PASSWORD_HASH --data-file=- --quiet && print_info "Secret RUMI_PASSWORD_HASH updated.")
+echo -n "$PASSWORD_HASH" | gcloud secrets create RUMI_PASSWORD_HASH --data-file=- --replication-policy=automatic --quiet || (echo -n "$PASSWORD_HASH" | gcloud secrets versions add RUMI_PASSWORD_HASH --data-file=- --quiet && print_info "Secret RUMI_PASSWORD_HASH updated.")
 
 print_info "Granting App Service Account access to secrets..."
 gcloud secrets add-iam-policy-binding RUMI_JWT_SECRET --member="serviceAccount:$APP_SA_EMAIL" --role="roles/secretmanager.secretAccessor" --quiet
