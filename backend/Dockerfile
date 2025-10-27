@@ -21,7 +21,7 @@ RUN pip wheel --no-cache-dir --wheel-dir /app/wheels -r requirements.txt
 
 # ---- Final Stage ----
 # Start fresh with the small, secure -slim image
-FROM python:3.11-slim
+FROM python:3.12
 
 # Set working directory
 WORKDIR /app
