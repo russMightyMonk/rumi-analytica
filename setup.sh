@@ -11,22 +11,10 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # --- Helper Functions ---
-function print_info {
-    echo -e "${BLUE}INFO: $1${NC}"
-}
-
-function print_success {
-    echo -e "${GREEN}SUCCESS: $1${NC}"
-}
-
-function print_error {
-    echo -e "${RED}ERROR: $1${NC}"
-    exit 1
-}
-
-function print_prompt {
-    echo -e -n "${YELLOW}$1${NC}"
-}
+function print_info { echo -e "${BLUE}INFO: $1${NC}"; }
+function print_success { echo -e "${GREEN}SUCCESS: $1${NC}"; }
+function print_error { echo -e "${RED}ERROR: $1${NC}"; exit 1; }
+function print_prompt { echo -e -n "${YELLOW}$1${NC}"; }
 
 # --- Check for required tools ---
 print_info "Checking for required tools (gcloud, docker, python3, pip)..."
@@ -38,28 +26,18 @@ print_success "All required tools are installed."
 
 # --- 1. GATHER USER INPUT ---
 print_info "Starting the automated setup for the Rumi-Analytica App."
-print_info "This script will provision all necessary GCP resources and set up a CI/CD pipeline."
 echo "------------------------------------------------------------------"
 
 print_prompt "Enter your GCP Project ID: "
 read PROJECT_ID
-
 print_prompt "Enter the GCP Region for your resources (e.g., us-central1): "
 read REGION
-
 print_prompt "Enter your GitHub Username: "
 read GITHUB_USER
-
 print_prompt "Enter your GitHub Repository Name (the name of your forked repo): "
 read GITHUB_REPO
-
-print_prompt "Enter your Google Generative AI API Key: "
-read -s GOOGLE_API_KEY
-echo ""
-
 print_prompt "Enter a username for the backend's simple auth: "
 read SIMPLE_AUTH_USERNAME
-
 print_prompt "Enter a password for the backend's simple auth: "
 read -s SIMPLE_AUTH_PASSWORD
 echo ""
@@ -74,18 +52,12 @@ echo "Auth Username:        $SIMPLE_AUTH_USERNAME"
 echo "------------------------------------------------------------------"
 print_prompt "Is this correct? [y/N] "
 read confirm
-if [[ ! "$confirm" =~ ^[yY](es)?$ ]]; then
-    echo "Setup cancelled."
-    exit 1
-fi
+if [[ ! "$confirm" =~ ^[yY](es)?$ ]]; then echo "Setup cancelled."; exit 1; fi
 
 # --- 2. SET VARIABLES AND CONFIGURE GCLOUD ---
 print_info "Configuring gcloud to use project $PROJECT_ID..."
 gcloud config set project "$PROJECT_ID"
 
-FRONTEND_SERVICE_NAME="rumi-analytica-frontend"
-BACKEND_SERVICE_NAME="rumi-analytica-backend"
-ARTIFACT_REPO_NAME="rumi-analytica"
 APP_SA_NAME="rumi-app-runner-sa"
 APP_SA_EMAIL="${APP_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 BUILD_SA_NAME="rumi-builder-sa"
@@ -93,19 +65,11 @@ BUILD_SA_EMAIL="${BUILD_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 
 # --- 3. ENABLE APIS ---
 print_info "Enabling necessary GCP APIs..."
-gcloud services enable \
-    run.googleapis.com \
-    iam.googleapis.com \
-    artifactregistry.googleapis.com \
-    cloudbuild.googleapis.com \
-    secretmanager.googleapis.com \
-    aiplatform.googleapis.com \
-    bigquery.googleapis.com
+gcloud services enable run.googleapis.com iam.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com aiplatform.googleapis.com bigquery.googleapis.com
 
 # --- 4. CREATE SERVICE ACCOUNTS AND PERMISSIONS ---
 print_info "Creating Service Account for the application runtime..."
-gcloud iam service-accounts create "$APP_SA_NAME" \
-  --display-name="Rumi Analytica App Runner SA" || print_info "App Service Account already exists."
+gcloud iam service-accounts create "$APP_SA_NAME" --display-name="Rumi Analytica App Runner SA" || print_info "App Service Account already exists."
 
 print_info "Granting App Service Account required roles (Vertex AI, BigQuery)..."
 gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$APP_SA_EMAIL" --role="roles/aiplatform.user" --condition=None
@@ -114,8 +78,7 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$A
 gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$APP_SA_EMAIL" --role="roles/bigquery.user" --condition=None
 
 print_info "Creating Service Account for Cloud Build..."
-gcloud iam service-accounts create "$BUILD_SA_NAME" \
-  --display-name="Rumi Analytica Builder SA" || print_info "Build Service Account already exists."
+gcloud iam service-accounts create "$BUILD_SA_NAME" --display-name="Rumi Analytica Builder SA" || print_info "Build Service Account already exists."
 
 print_info "Granting Cloud Build SA required roles (Cloud Run, Artifact Registry, IAM, Logging)..."
 gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$BUILD_SA_EMAIL" --role="roles/run.admin" --condition=None
@@ -126,10 +89,8 @@ gcloud iam service-accounts add-iam-policy-binding "$APP_SA_EMAIL" --member="ser
 
 # --- 5. CREATE SECRETS ---
 print_info "Creating secrets in Secret Manager..."
-
 JWT_SECRET=$(openssl rand -base64 32)
-echo "$JWT_SECRET" | gcloud secrets create RUMI_JWT_SECRET --data-file=- --replication-policy=automatic --quiet || \
-(echo "$JWT_SECRET" | gcloud secrets versions add RUMI_JWT_SECRET --data-file=- --quiet && print_info "Secret RUMI_JWT_SECRET updated.")
+echo "$JWT_SECRET" | gcloud secrets create RUMI_JWT_SECRET --data-file=- --replication-policy=automatic --quiet || (echo "$JWT_SECRET" | gcloud secrets versions add RUMI_JWT_SECRET --data-file=- --quiet && print_info "Secret RUMI_JWT_SECRET updated.")
 
 print_info "Installing bcrypt to hash password..."
 pip install bcrypt > /dev/null
@@ -137,36 +98,26 @@ PASSWORD_HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$SIMPLE_AUTH_PA
 pip uninstall -y bcrypt > /dev/null
 print_info "Password hashed successfully."
 
-echo "$PASSWORD_HASH" | gcloud secrets create RUMI_PASSWORD_HASH --data-file=- --replication-policy=automatic --quiet || \
-(echo "$PASSWORD_HASH" | gcloud secrets versions add RUMI_PASSWORD_HASH --data-file=- --quiet && print_info "Secret RUMI_PASSWORD_HASH updated.")
-
-echo "$GOOGLE_API_KEY" | gcloud secrets create GOOGLE_API_KEY --data-file=- --replication-policy=automatic --quiet || \
-(echo "$GOOGLE_API_KEY" | gcloud secrets versions add GOOGLE_API_KEY --data-file=- --quiet && print_info "Secret GOOGLE_API_KEY updated.")
+echo "$PASSWORD_HASH" | gcloud secrets create RUMI_PASSWORD_HASH --data-file=- --replication-policy=automatic --quiet || (echo "$PASSWORD_HASH" | gcloud secrets versions add RUMI_PASSWORD_HASH --data-file=- --quiet && print_info "Secret RUMI_PASSWORD_HASH updated.")
 
 print_info "Granting App Service Account access to secrets..."
 gcloud secrets add-iam-policy-binding RUMI_JWT_SECRET --member="serviceAccount:$APP_SA_EMAIL" --role="roles/secretmanager.secretAccessor" --quiet
 gcloud secrets add-iam-policy-binding RUMI_PASSWORD_HASH --member="serviceAccount:$APP_SA_EMAIL" --role="roles/secretmanager.secretAccessor" --quiet
-gcloud secrets add-iam-policy-binding GOOGLE_API_KEY --member="serviceAccount:$APP_SA_EMAIL" --role="roles/secretmanager.secretAccessor" --quiet
 
 # --- 6. CONFIGURE ARTIFACT REGISTRY AND DOCKER ---
-print_info "Creating Artifact Registry repository '$ARTIFACT_REPO_NAME'..."
-gcloud artifacts repositories create "$ARTIFACT_REPO_NAME" \
-   --repository-format=docker \
-   --location="$REGION" \
-   --description="Docker repository for Rumi Analytica" || print_info "Artifact Registry repository already exists."
-
+print_info "Creating Artifact Registry repository 'rumi-analytica'..."
+gcloud artifacts repositories create "rumi-analytica" --repository-format=docker --location="$REGION" --description="Docker repository for Rumi Analytica" || print_info "Artifact Registry repository already exists."
 print_info "Configuring Docker to authenticate with Artifact Registry..."
 gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
 # --- 7. INITIAL DEPLOYMENT ---
 print_info "Starting initial deployment process..."
-
 print_info "[1/3] Building and deploying backend for the first time..."
-BACKEND_IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO_NAME}/backend:initial"
+BACKEND_IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/rumi-analytica/backend:initial"
 (cd backend && docker build -t "$BACKEND_IMAGE_TAG" .)
 docker push "$BACKEND_IMAGE_TAG"
 
-gcloud run deploy "$BACKEND_SERVICE_NAME" \
+gcloud run deploy "rumi-analytica-backend" \
     --image="$BACKEND_IMAGE_TAG" \
     --service-account="$APP_SA_EMAIL" \
     --region="$REGION" \
@@ -174,42 +125,32 @@ gcloud run deploy "$BACKEND_SERVICE_NAME" \
     --allow-unauthenticated \
     --port="8080" \
     --set-env-vars="SIMPLE_AUTH_USERNAME=${SIMPLE_AUTH_USERNAME},GOOGLE_GENAI_USE_VERTEXAI=True" \
-    --set-secrets="SIMPLE_AUTH_PASSWORD_HASH=RUMI_PASSWORD_HASH:latest,JWT_SECRET_KEY=RUMI_JWT_SECRET:latest,GOOGLE_API_KEY=GOOGLE_API_KEY:latest"
+    --set-secrets="SIMPLE_AUTH_PASSWORD_HASH=RUMI_PASSWORD_HASH:latest,JWT_SECRET_KEY=RUMI_JWT_SECRET:latest"
 
-BACKEND_URL=$(gcloud run services describe "$BACKEND_SERVICE_NAME" --region="$REGION" --format='value(status.url)')
+BACKEND_URL=$(gcloud run services describe "rumi-analytica-backend" --region="$REGION" --format='value(status.url)')
 print_success "Backend deployed. URL: $BACKEND_URL"
 
 print_info "[2/3] Building and deploying frontend..."
-FRONTEND_IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO_NAME}/frontend:initial"
-(
-    cd frontend && \
-    npm install && \
-    VITE_BACKEND_URL="$BACKEND_URL" npm run build && \
-    docker build -t "$FRONTEND_IMAGE_TAG" .
-)
+FRONTEND_IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/rumi-analytica/frontend:initial"
+(cd frontend && npm install && VITE_BACKEND_URL="$BACKEND_URL" npm run build && docker build -t "$FRONTEND_IMAGE_TAG" .)
 docker push "$FRONTEND_IMAGE_TAG"
 
-gcloud run deploy "$FRONTEND_SERVICE_NAME" \
+gcloud run deploy "rumi-analytica-frontend" \
     --image="$FRONTEND_IMAGE_TAG" \
     --region="$REGION" \
     --platform="managed" \
     --allow-unauthenticated \
     --port="8080"
 
-FRONTEND_URL=$(gcloud run services describe "$FRONTEND_SERVICE_NAME" --region="$REGION" --format='value(status.url)')
+FRONTEND_URL=$(gcloud run services describe "rumi-analytica-frontend" --region="$REGION" --format='value(status.url)')
 print_success "Frontend deployed. URL: $FRONTEND_URL"
 
 print_info "[3/3] Updating backend with frontend URL for CORS..."
-gcloud run services update "$BACKEND_SERVICE_NAME" \
-    --region="$REGION" \
-    --update-env-vars="FRONTEND_URL=${FRONTEND_URL}"
+gcloud run services update "rumi-analytica-backend" --region="$REGION" --update-env-vars="FRONTEND_URL=${FRONTEND_URL}"
 print_success "Backend updated."
 
 # --- 8. CREATE CLOUD BUILD TRIGGERS ---
 print_info "Creating Cloud Build triggers (assuming GitHub connection is already established)..."
-
-# Backend Trigger
-print_info "Creating backend trigger..."
 gcloud builds triggers create github \
     --name="deploy-rumi-backend-main" \
     --region="$REGION" \
@@ -221,8 +162,6 @@ gcloud builds triggers create github \
     --included-files="backend/**" \
     --substitutions="_SERVICE=backend,_BACKEND_URL=${BACKEND_URL},_FRONTEND_URL=${FRONTEND_URL},_SIMPLE_AUTH_USERNAME=${SIMPLE_AUTH_USERNAME}"
 
-# Frontend Trigger
-print_info "Creating frontend trigger..."
 gcloud builds triggers create github \
     --name="deploy-rumi-frontend-main" \
     --region="$REGION" \
