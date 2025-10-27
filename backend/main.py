@@ -21,17 +21,23 @@ from agents.agent.agent import root_agent as agent
 # --- Load Environment Variables ---
 load_dotenv()
 
-# These are loaded from Secret Manager in Cloud Run
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# --- UPDATED AUTHENTICATION LOGIC ---
+# Check if we are using Vertex AI via service account
+USE_VERTEX_AI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "false").lower() == "true"
+
+# If not using Vertex, an API key is required.
+if not USE_VERTEX_AI:
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    if not GOOGLE_API_KEY:
+        print("❌ GOOGLE_API_KEY is not set and not using Vertex AI. Exiting.", file=sys.stderr)
+        sys.exit(1)
+
+# These are always required and loaded from the environment/secrets
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 SIMPLE_AUTH_PASSWORD_HASH = os.getenv("SIMPLE_AUTH_PASSWORD_HASH")
-
-# This is loaded from environment variables in Cloud Run
 SIMPLE_AUTH_USERNAME = os.getenv("SIMPLE_AUTH_USERNAME")
 ALGORITHM = "HS256"
 
-if not GOOGLE_API_KEY:
-    print("❌ GOOGLE_API_KEY is not set. Exiting.", file=sys.stderr); sys.exit(1)
 if not all([JWT_SECRET_KEY, SIMPLE_AUTH_USERNAME, SIMPLE_AUTH_PASSWORD_HASH]):
     print("❌ Auth env vars are not set. Exiting.", file=sys.stderr); sys.exit(1)
 
@@ -39,15 +45,12 @@ if not all([JWT_SECRET_KEY, SIMPLE_AUTH_USERNAME, SIMPLE_AUTH_PASSWORD_HASH]):
 app = FastAPI(title="Rumi-Analytica Backend")
 router = APIRouter()
 
-# --- CORS Middleware (UPDATED) ---
-# Base origins for local development
+# --- CORS Middleware ---
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8080",
 ]
-
-# Add the deployed frontend URL from environment variables for production
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 if FRONTEND_URL:
     print(f"INFO: Allowing CORS for deployed origin: {FRONTEND_URL}")
@@ -61,6 +64,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ... (The rest of the file remains the same) ...
 # --- Create a shared session service instance ---
 session_service = InMemorySessionService()
 AGENT_APP_NAME = "agent"
