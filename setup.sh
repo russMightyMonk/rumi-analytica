@@ -92,11 +92,12 @@ print_info "Creating secrets in Secret Manager..."
 JWT_SECRET=$(openssl rand -base64 32)
 echo "$JWT_SECRET" | gcloud secrets create RUMI_JWT_SECRET --data-file=- --replication-policy=automatic --quiet || (echo "$JWT_SECRET" | gcloud secrets versions add RUMI_JWT_SECRET --data-file=- --quiet && print_info "Secret RUMI_JWT_SECRET updated.")
 
-print_info "Installing bcrypt to hash password..."
-pip install bcrypt > /dev/null
-PASSWORD_HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$SIMPLE_AUTH_PASSWORD', bcrypt.gensalt()).decode())")
-pip uninstall -y bcrypt > /dev/null
-print_info "Password hashed successfully."
+# Use passlib to ensure compatibility with the backend's verification method
+print_info "Installing passlib to hash password..."
+pip install "passlib[bcrypt]" > /dev/null
+PASSWORD_HASH=$(python3 -c "from passlib.context import CryptContext; print(CryptContext(schemes=['bcrypt']).hash('$SIMPLE_AUTH_PASSWORD'))")
+pip uninstall -y "passlib[bcrypt]" > /dev/null
+print_info "Password hashed successfully using passlib."
 
 echo "$PASSWORD_HASH" | gcloud secrets create RUMI_PASSWORD_HASH --data-file=- --replication-policy=automatic --quiet || (echo "$PASSWORD_HASH" | gcloud secrets versions add RUMI_PASSWORD_HASH --data-file=- --quiet && print_info "Secret RUMI_PASSWORD_HASH updated.")
 
